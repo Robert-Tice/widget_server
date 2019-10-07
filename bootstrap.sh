@@ -16,6 +16,8 @@ lxd init --auto
 
 # Install code_examples_server deps
 cd /vagrant
+python3 -m venv venv
+source venv/bin/activate
 pip3 install -r REQUIREMENTS.txt
 cd infrastructure
 make
