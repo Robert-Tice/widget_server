@@ -13,6 +13,8 @@ import os
 import codecs
 import json
 import glob
+import logging
+import os
 import time
 import sys
 import subprocess
@@ -21,7 +23,6 @@ import traceback
 CONT = 'safecontainer'
 INTERRUPT_STRING = '<interrupted>'
 INTERRUPT_RETURNCODE = 124
-DEBUG = False
 
 CLI_FILE = "cli.txt"
 
@@ -49,6 +50,7 @@ pragma Warnings (Off, "file name does not match");
 
 
 procedure_re = re.compile("^procedure +[A-Za-z][_a-zA-Z0-9]*[ |\n]+(is|with)", re.MULTILINE)
+
 
 ########################
 # Some print functions #
@@ -89,21 +91,16 @@ def print_console(cmd_list, lab_ref=None):
     print_generic(clean_str(" ".join(cmd_list).replace(workdir, '.')), "console", lab_ref)
 
 
-def debug_print(str):
-    if DEBUG:
-        print_stdout(str)
-
-
 def print_internal_error(msg, lab_ref=None):
     print_generic(msg, "internal_error", lab_ref)
 
 
 def run(command):
-    debug_print(">{}".format(" ".join(command)))
+    logger.debug(">{}".format(" ".join(command)))
     output = subprocess.check_output(["lxc", "exec", CONT, "--"] + command)
     if output:
         output = output.rstrip()
-    debug_print("<{}".format(output))
+    logger.debug("<{}".format(output))
     return output
 
 
@@ -128,10 +125,10 @@ def extract_ada_main(workdir):
             main = ''
 
         if len(mains) > 1:
-            debug_print("multiple mains found")
+            logger.debug("multiple mains found")
         return main
     else:
-        debug_print("No main found")
+        logger.debug("No main found")
         return ''
 
 
@@ -205,7 +202,7 @@ def safe_run(workdir, mode, lab):
         stdout_list = []
         p = None
         try:
-            debug_print("running: {}".format(cl))
+            logger.debug("running: {}".format(cl))
 
             p = subprocess.Popen(cl, cwd=workdir,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
@@ -389,13 +386,22 @@ def safe_run(workdir, mode, lab):
     finally:
         if os.path.isdir(workdir):
             time.sleep(0.2)  # Time for the filesystem to sync
-            if not DEBUG:
-                c(["rm", "-rf", workdir])
+            c(["rm", "-rf", workdir])
 
 
 if __name__ == '__main__':
     # perform some sanity checking on args - this is not meant to
     # be launched interactively
+    logger = logging.getLogger("run.py")
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter("{} : %(asctime)s %(levelname)s (%(name)s) %(message)s".format(CONT))
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    env_level = os.getenv('LOGLEVEL')
+    level = logging.getLevelName(env_level)
+    logger.setLevel(level)
+
+    logger.debug("loglevel {}".format(os.getenv('LOGLEVEL')))
     if len(sys.argv) >= 3:
         workdir = sys.argv[1]
         mode = sys.argv[2]

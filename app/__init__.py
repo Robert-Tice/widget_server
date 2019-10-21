@@ -8,10 +8,12 @@ from .widget import widget_routes, tasks, celery
 logger = logging.getLogger()
 
 
+# This is called by the celery workers
 def create_celery(debug=False):
     return create(debug=debug, mode='celery')
 
 
+# This 
 def create_app(debug=False):
     return create(debug=debug, mode='app')
 

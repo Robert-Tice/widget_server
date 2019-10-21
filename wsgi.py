@@ -1,5 +1,6 @@
 from app import create_app
 
+# Create the app
 app = create_app(debug=True)
 
 if __name__ == "__main__":

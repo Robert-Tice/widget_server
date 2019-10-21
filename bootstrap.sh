@@ -9,7 +9,8 @@ apt-get install -y \
     lxc \
     lxd \
     lxd-client \
-    make 
+    make \
+    rabbitmq-server
 
 # Initialize lxc for code_examples_server
 lxd init --auto
