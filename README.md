@@ -18,9 +18,8 @@ $ vagrant ssh
 $ cd /vagrant
 $ source venv/bin/activate
 
-# The next 3 commands should be run simultaneously. I use three terminal windows for this:
+# The next 2 commands should be run simultaneously. I use three terminal windows for this:
 
-$ ./run_redis.sh
 $ flask run --host=0.0.0.0
 $ celery worker -A celery_worker.celery -E --loglevel=DEBUG
 ```
