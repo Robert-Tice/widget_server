@@ -6,7 +6,7 @@ class Config(object):
 
     CELERY_BROKER_URL = 'pyamqp://guest@localhost//'
     CELERY_RESULT_BACKEND = 'rpc://'
-    #TASK_TIME_LIMIT = 30
+    TASK_TIME_LIMIT = 30
 
     RECEIVED_FILE_CHAR_LIMIT = 50 * 1000
     # The limit in number of characters of files to accept

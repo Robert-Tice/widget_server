@@ -5,15 +5,13 @@ from flask import Flask
 from .config import Config
 from .widget import widget_routes, tasks, celery
 
-logger = logging.getLogger()
-
 
 # This is called by the celery workers
 def create_celery(debug=False):
     return create(debug=debug, mode='celery')
 
 
-# This 
+# This
 def create_app(debug=False):
     return create(debug=debug, mode='app')
 
@@ -24,8 +22,6 @@ def create(debug=False, mode='app'):
 
     app = Flask(__name__, instance_relative_config=False)
     app.debug = debug
-
-    configure_logging(debug=debug)
 
     app.config.from_object(Config)
     configure_celery(app, tasks.celery)
@@ -39,7 +35,7 @@ def create(debug=False, mode='app'):
         return celery
 
 def configure_celery(app, celery):
-    logging.debug('Configuring Celery')
+    app.logger.debug('Configuring Celery')
     # set broker url and result backend from app config
     celery.conf.broker_url = app.config['CELERY_BROKER_URL']
     celery.conf.result_backend = app.config['CELERY_RESULT_BACKEND']
@@ -56,23 +52,3 @@ def configure_celery(app, celery):
 
     # run finalize to process decorated tasks
     celery.finalize()
-    
-def configure_logging(debug=False):
-    root = logging.getLogger()
-    h = logging.StreamHandler()
-    fmt = logging.Formatter(
-        fmt='%(asctime)s %(levelname)s (%(name)s) %(message)s',
-        datefmt='%Y-%m-%dT%H:%M:%S'
-    )
-    h.setFormatter(fmt)
-
-    root.addHandler(h)
-
-    if debug:
-        root.setLevel(logging.DEBUG)
-    else:
-        root.setLevel(logging.INFO)
-
-
-
-

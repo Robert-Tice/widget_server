@@ -177,6 +177,7 @@ def check_output():
             result = task.get()
             response['completed'] = True
             response['status'] = result["status"]
+            shutil.rmtree(data['tempd'])
 
     app.logger.debug(
         'Responding with response={} and code={}'.format(response, error_code))
