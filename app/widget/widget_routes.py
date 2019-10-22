@@ -1,16 +1,18 @@
-from flask import Blueprint, make_response, request
+from flask import Blueprint, make_response, request, send_file
 from flask import current_app as app
 from flask_cors import CORS
 
 from celery.task.control import inspect
 
 import glob
+import io
 import json
 import os
 import codecs
 import shutil
-
+import sys
 import tempfile
+import zipfile
 
 from . import tasks
 
@@ -62,6 +64,40 @@ def prep_example_directory(example, request):
     return (tempd, None)
 
 
+@widget_bp.route('/download/', methods=['POST'])
+def download_example():
+
+    data = request.get_json()
+    e = get_example()
+    if not e:
+        return compose_response({'identifier': '', 'message': "example not found"}, 500)
+
+    tempd, message = prep_example_directory(e, data)
+    if message:
+        return compose_response({'identifier': '', 'message': message}, 500)
+
+    app.logger.debug("Zipping tmp dir {}".format(tempd))
+
+    memory_file = io.BytesIO()
+    cwd = os.getcwd()
+    os.chdir(tempd)
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk('.'):
+            for file in files:
+                app.logger.debug("Adding {} to zip".format(os.path.join(root, file)))
+                zf.write(os.path.join(root, file))
+    os.chdir(cwd)
+    memory_file.seek(0)
+
+    archive = data['name'] + '.zip'
+
+    app.logger.debug("Sending zipped file {} size={}".format(archive, sys.getsizeof(memory_file)))
+    response = make_response(send_file(memory_file, attachment_filename=archive, as_attachment=True))
+    response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Disposition'
+    return response
+
+
 @widget_bp.route('/run_program/', methods=['POST'])
 def run_program():
     data = request.get_json()
@@ -86,8 +122,8 @@ def run_program():
     run_cmd = "python /workspace/run.py /workspace/sessions/{} {}".format(
         os.path.basename(tempd), mode)
 
-    if 'lab' in data:
-        lab = data['lab']
+    if data['lab']:
+        lab = data['name']
         run_cmd += " {}".format(lab)
 
     # Push the code to the container in Celery task
