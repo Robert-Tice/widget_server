@@ -1,26 +1,3 @@
 # widget_server
 
-Server code for learn.adacore.com widgets
-
-## Requirements
-
-Vagrant, Virtual box
-
-## Getting started
-
-To setup run:
-```
-$ vagrant up
-$ vagrant ssh
-
-# From the vagrant VM run:
-
-$ cd /vagrant
-$ source venv/bin/activate
-
-# The next 2 commands should be run simultaneously. I use three terminal windows for this:
-
-$ flask run --host=0.0.0.0
-$ celery worker -A celery_worker.celery -E --loglevel=DEBUG
-```
-
+This repo has been archived. The code has been migrated to the AdaCore/learn repo and can be found at: https://github.com/AdaCore/learn
